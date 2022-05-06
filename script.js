@@ -59,11 +59,63 @@ room.on('member_leave', ({id}) => {
   // Add this after 'member_leave' event
 room.on('data', (text, member) => {
  if (member) {
-   // addMessageToListDOM(text, member); uncomment later
+   addMessageToListDOM(text, member); 
  } else {
    // Message is from server
  }
 });
 });
  
-
+ membersCount: document.querySelector('.members-count'),
+ membersList: document.querySelector('.members-list'),
+ messages: document.querySelector('.messages'),
+ input: document.querySelector('.message-form__input'),
+ form: document.querySelector('.message-form'),
+};
+ 
+function createMemberElement(member) {
+ const { name, color } = member.clientData;
+ const el = document.createElement('div');
+ el.appendChild(document.createTextNode(name));
+ el.className = 'member';
+ el.style.color = color;
+ return el;
+}
+ 
+function updateMembersDOM() {
+ DOM.membersCount.innerText = `${members.length} users in room:`;
+ DOM.membersList.innerHTML = '';
+ members.forEach(member =>
+   DOM.membersList.appendChild(createMemberElement(member))
+ );
+}
+ 
+function createMessageElement(text, member) {
+ const el = document.createElement('div');
+ el.appendChild(createMemberElement(member));
+ el.appendChild(document.createTextNode(text));
+ el.className = 'message';
+ return el;
+}
+ 
+function addMessageToListDOM(text, member) {
+ const el = DOM.messages;
+ const wasTop = el.scrollTop === el.scrollHeight - el.clientHeight;
+ el.appendChild(createMessageElement(text, member));
+ if (wasTop) {
+   el.scrollTop = el.scrollHeight - el.clientHeight;
+ }
+}
+DOM.form.addEventListener('submit', sendMessage);
+ 
+function sendMessage() {
+ const value = DOM.input.value;
+ if (value === '') {
+   return;
+ }
+ DOM.input.value = '';
+ drone.publish({
+   room: 'observable-room',
+   message: value,
+ });
+}
